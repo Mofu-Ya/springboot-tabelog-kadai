@@ -1,0 +1,161 @@
+package com.example.samuraitabelog.controller;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.samuraitabelog.entity.Holiday;
+import com.example.samuraitabelog.entity.Reservation;
+import com.example.samuraitabelog.entity.Restaurant;
+import com.example.samuraitabelog.entity.User;
+import com.example.samuraitabelog.form.ReservationInputForm;
+import com.example.samuraitabelog.form.ReservationRegisterForm;
+import com.example.samuraitabelog.repository.HolidayRepository;
+import com.example.samuraitabelog.repository.ReservationRepository;
+import com.example.samuraitabelog.repository.RestaurantRepository;
+import com.example.samuraitabelog.security.UserDetailsImpl;
+import com.example.samuraitabelog.service.ReservationService;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+
+@Controller
+public class ReservationController {
+	private final ReservationRepository reservationRepository;
+	private final RestaurantRepository RestaurantRepository;
+	private final ReservationService reservationService;
+	private final HolidayRepository holidayRepository;
+//	private final StripeService stripeService;
+	
+	
+	public ReservationController(ReservationRepository reservationRepository, RestaurantRepository RestaurantRepository, ReservationService reservationService, HolidayRepository holidayRepository) {
+		this.reservationRepository = reservationRepository;
+		this.RestaurantRepository = RestaurantRepository;
+		this.holidayRepository = holidayRepository;
+		this.reservationService = reservationService;
+//		this.stripeService = stripeService;
+	}
+	
+	@GetMapping("/reservations")
+	public String index(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl, @PageableDefault(page = 0, size = 10, sort = "id", direction = Direction.ASC) Pageable pageable, Model model) {
+		User user = userDetailsImpl.getUser();
+		Page<Reservation> reservationPage = reservationRepository.findByUserOrderByCreatedAtDesc(user, pageable);
+		
+		model.addAttribute("reservationPage", reservationPage);
+		
+		return "reservations/index";
+	}
+	
+	@GetMapping("/restaurants/{id}/reservations/input")
+	public String input(@PathVariable(name = "id") Integer id,
+						@ModelAttribute @Validated ReservationInputForm reservationInputForm,
+						BindingResult bindingResult,
+						RedirectAttributes redirectAttributes,
+						Model model) {
+		Restaurant Restaurant = RestaurantRepository.getReferenceById(id);
+		Integer numberOfPeople = reservationInputForm.getNumberOfPeople();
+		Integer capacity = Restaurant.getNumberOfSeats();
+		
+//		if (numberOfPeople != null) {
+//			if (!reservationService.isWithinCapacity(numberOfPeople, capacity)) {
+//				FieldError fieldError = new FieldError(bindingResult.getObjectName(), "numberOfPeople", "宿泊人数が定員を超えています。");
+//				bindingResult.addError(fieldError);
+//			}
+//		}
+//		
+//		if (bindingResult.hasErrors()) {
+//			model.addAttribute("Restaurant", Restaurant);
+//			model.addAttribute("errorMessage", "予約内容に不備があります。");
+//			return "Restaurants/show";
+//		}
+		
+		redirectAttributes.addFlashAttribute("reservationInputForm", reservationInputForm);
+		
+		return "redirect:/restaurants/{id}/reservations/confirm";
+	}
+	
+	@GetMapping("/restaurants/{id}/reservations/register")
+	public String resgister(@PathVariable(name = "id") Integer id, Model model) {
+		ReservationRegisterForm reservationRegisterForm = new ReservationRegisterForm();
+		model.addAttribute("reservationRegisterForm", reservationRegisterForm);
+		Restaurant restaurant = RestaurantRepository.getReferenceById(id);
+		List<Holiday> holidays = holidayRepository.findAllByRestaurantId(restaurant.getId());
+		List<Integer> disabledDays = holidays				
+					.stream()
+					.map(Holiday::getDayOfWeekId)
+					.filter(Objects::nonNull)
+					.collect(Collectors.toList());
+		 
+		model.addAttribute("restaurant", restaurant);
+		model.addAttribute("disabledDays", disabledDays);
+			
+		return "reservations/register";
+	}
+	
+	@PostMapping("/restaurants/{id}/reservations/register")
+	public String resgister(@PathVariable(name = "id") Integer id, @AuthenticationPrincipal UserDetailsImpl userDetailsImpl,
+			@ModelAttribute @Validated ReservationRegisterForm reservationRegisterForm,
+			BindingResult bindingResult,
+			RedirectAttributes redirectAttributes,
+			Model model) {		
+		model.addAttribute("reservationRegisterForm", reservationRegisterForm);
+		Restaurant restaurant = RestaurantRepository.getReferenceById(id);
+		List<Holiday> holidays = holidayRepository.findAllByRestaurantId(restaurant.getId());
+		List<Integer> disabledDays = holidays				
+					.stream()
+					.map(Holiday::getDayOfWeekId)
+					.filter(Objects::nonNull)
+					.collect(Collectors.toList());
+		 
+		model.addAttribute("restaurant", restaurant);
+		model.addAttribute("disabledDays", disabledDays);
+			
+		redirectAttributes.addFlashAttribute("reservationRegisterForm", reservationRegisterForm);
+		
+		return "redirect:/restaurants/{id}/reservations/confirm";
+	}
+	
+	@GetMapping("/restaurants/{id}/reservations/confirm")
+	public String confirm(@PathVariable(name = "id") Integer id, 
+						@ModelAttribute ReservationInputForm reservationInputForm,
+						@AuthenticationPrincipal UserDetailsImpl userDetailsImpl,
+						HttpServletRequest httpServletRequest,
+						Model model) {
+		Restaurant Restaurant = RestaurantRepository.getReferenceById(id);
+		User user = userDetailsImpl.getUser();
+		
+		//チェックイン日とチェックアウト日を取得する
+//		LocalDate checkinDate = reservationInputForm.getCheckinDate();
+//		LocalDate checkoutDate = reservationInputForm.getCheckoutDate();
+//		
+		// 宿泊料金を計算する
+//		Integer price = Restaurant.getPrice(); 
+//		Integer amount = reservationService.calculateAmount(checkinDate, checkoutDate, price);
+//		
+//		ReservationRegisterForm reservationRegisterForm = new ReservationRegisterForm(Restaurant.getId(), user.getId(), checkinDate.toString(), checkoutDate.toString(), reservationInputForm.getNumberOfPeople(), amount);
+//        
+//		String sessionId = stripeService.createStripeSession(Restaurant.getName(),reservationRegisterForm, httpServletRequest);
+//        model.addAttribute("Restaurant", Restaurant);  
+//        model.addAttribute("reservationRegisterForm", reservationRegisterForm);       
+//        model.addAttribute("sessionId", sessionId);
+//        
+        return "reservations/confirm";
+    } 
+	
+}
+

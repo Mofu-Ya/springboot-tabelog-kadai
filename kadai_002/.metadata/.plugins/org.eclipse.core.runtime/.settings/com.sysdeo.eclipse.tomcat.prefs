@@ -1,0 +1,7 @@
+tomcatDir=C:/Users/山中玲/Documents/work/temp_java/pleiades-2023-12-java-win-64bit-jre_20240218/tomcat/9
+eclipse.preferences.version=1
+fixTomcatHomeBug=fixed
+contextsDir=C:/Users/山中玲/Documents/work/temp_java/pleiades-2023-12-java-win-64bit-jre_20240218/tomcat/9/conf/Catalina/localhost
+tomcatVersion=tomcatV9
+computeSourcePath=true
+tomcatConfigFile=C:/Users/山中玲/Documents/work/temp_java/pleiades-2023-12-java-win-64bit-jre_20240218/tomcat/9/conf/server.xml

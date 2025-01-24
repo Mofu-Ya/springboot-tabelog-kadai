@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">    
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+          
+        <title>予約確認</title>   
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+            <div th:replace="~{fragment :: header}"></div>
+            
+            <main>
+                <div class="container pt-4 pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xl-4 col-lg-6 col-md-6 col-sm-8 mt-5">                            
+                            <h1 class="mb-4 text-center">予約確認</h1>
+                            <div class="d-flex justify-content-center">     
+								<div class="card confirm-card">
+									<div class="card-body confirm-card-body mt-3"> 
+										
+						 				<p class="text-center mb-3">以下の内容で予約しますか？</p>	
+						 				<span class="text-center mb-3" th;text="${resrtaurant.getName()}"></span>					 					
+						 				<form method="post" th:action="@{/restaurants/__${restaurant.getId()}__/reservations/create}" th:object="${reservationRegisterForm}" enctype="multipart/form-data">                                                                                                                            			
+			                                <div class="form-group row mb-3">
+			                                    <div class="col-md-4">
+			                                        <label for="bookingDate" class="col-form-label text-md-left fw-bold">予約日</label>
+			                                    </div> 
+			                                    <div class="col-md-8">
+													<span th:text="${reservationRegisterForm.getBookingDate()}"></span>			                                        			                                        
+			                                    </div>                                    
+			                                </div>
+			                                
+			                                <div class="form-group row mb-3">
+			                                    <div class="col-md-4">
+			                                        <label for="bookingTime" class="col-form-label text-md-left fw-bold">予約時刻</label>
+			                                    </div> 
+			                                    <div class="col-md-8">
+													<span th:text="${reservationRegisterForm.getBookingTime()}"></span>			                                        			                                        
+			                                    </div>                                    
+			                                </div>
+			                                
+			                                <div class="form-group row mb-3">
+			                                    <div class="col-md-4">
+			                                        <label for="stayTime" class="col-form-label text-md-left fw-bold">時間</label>
+			                                    </div> 
+			                                    <div class="col-md-8">
+													<span th:text="${reservationRegisterForm.getStayTime() + ' 時間'}"></span>			                                        			                                        
+			                                    </div>                                    
+			                                </div>
+			                                
+			                                <div class="form-group row mb-3">
+			                                    <div class="col-md-4">
+			                                        <label for="numberOfPeople" class="col-form-label text-md-left fw-bold">人数</label>
+			                                    </div> 
+			                                    <div class="col-md-8">
+													<span th:text="${reservationRegisterForm.getNumberOfPeople() + ' 人'}"></span>			                                        			                                        
+			                                    </div>                                    
+			                                </div>
+                                
+			                                <div class="form-group d-flex justify-content-center my-4">
+												<a class="btn shadow-sm btn-w160 samuraitabelog-cancel-btn mx-4" th:href="@{/restaurants/__${restaurant.getId()}__}">キャンセル</a> 
+			                                    <button type="submit" class="btn text-white shadow-sm btn-w160 samuraitabelog-btn  mx-4">予約を確定する</button>
+			                                </div>                                
+			                            </form>   
+									</div>
+								</div> 
+                            </div>     
+							                            
+                        </div>
+                    </div>
+                </div>  
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div>  
+  </body>
+</html>

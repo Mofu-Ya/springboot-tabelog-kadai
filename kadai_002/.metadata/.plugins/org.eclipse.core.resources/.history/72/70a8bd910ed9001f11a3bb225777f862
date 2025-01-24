@@ -1,0 +1,53 @@
+package com.example.samuraitabelog.repository;
+
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+
+
+import com.example.samuraitabelog.entity.Category;
+import com.example.samuraitabelog.entity.Restaurant;
+
+public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>, JpaSpecificationExecutor<Restaurant>  {
+	public Page<Restaurant> findByNameLike(String keyword, Pageable pageable);
+	public List<Restaurant> findTop5ByOrderByCreatedAtDesc();
+	public Page<Restaurant> findByNameLikeOrderByHighestPriceDesc(String nameKeyword, Pageable pageable);
+	public Page<Restaurant> findByNameLikeOrderByLowestPriceAsc(String nameKeyword, Pageable pageable);
+	public Page<Restaurant> findByNameLikeOrderByCreatedAtDesc(String nameKeyword, Pageable pageable);
+	public Page<Restaurant> findByCategoryOrderByHighestPriceDesc(Category category, Pageable pageable);
+	public Page<Restaurant> findByCategoryOrderByLowestPriceAsc(Category category, Pageable pageable);
+	public Page<Restaurant> findByCategoryOrderByCreatedAtDesc(Category category, Pageable pageable);
+	public Page<Restaurant> findByHighestPriceLessThanEqualOrderByCreatedAtDesc(Integer price, Pageable pageable);
+	public Page<Restaurant> findByHighestPriceLessThanEqualOrderByLowestPriceAsc(Integer price, Pageable pageable);
+	public Page<Restaurant> findByHighestPriceLessThanEqualOrderByHighestPriceDesc(Integer price, Pageable pageable);
+	
+	
+	public Page<Restaurant> findAllByOrderByHighestPriceDesc(Pageable pageable);
+	public Page<Restaurant> findAllByOrderByLowestPriceAsc(Pageable pageable);
+	public Page<Restaurant> findAllByOrderByCreatedAtDesc(Pageable pageable);
+	
+	
+    @Query("SELECT s FROM Store s " +
+           "WHERE (:maxPrice IS NULL OR s.minPrice <= :maxPrice) " +
+           "AND (:name IS NULL OR s.name LIKE %:name%) " +
+           "AND (:category IS NULL OR s.category = :category) " +
+           "ORDER BY " +
+           "CASE WHEN :sortOrder = 'new' THEN s.createdAt END DESC, " +
+           "CASE WHEN :sortOrder = 'low_price' THEN s.minPrice END ASC, " +
+           "CASE WHEN :sortOrder = 'high_price' THEN s.minPrice END DESC")
+    Page<Restaurant> searchStores(
+        @Param("maxPrice") Integer maxPrice,
+        @Param("name") String name,
+        @Param("category") String category,
+        @Param("sortOrder") String sortOrder,
+        Pageable pageable
+    );
+	
+
+}

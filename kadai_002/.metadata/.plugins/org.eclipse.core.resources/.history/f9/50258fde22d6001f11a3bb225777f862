@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">    
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+          
+         	<!-- Flatpickr -->
+         	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <title>店舗詳細</title>   
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+            <div th:replace="~{fragment :: header}"></div>
+            
+            <main>
+                <div class="container pt-4 pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xxl-9 col-xl-10 col-lg-11">
+                            <nav class="mb-4" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">                        
+                                    <li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/restaurants}">店舗一覧</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">店舗詳細</li>
+                                </ol>
+                            </nav> 
+                            <form sec:authorize="isAuthenticated()" th:action="@{/favorites/__${restaurant.getId()}__/toggle}" method="post">
+							        <input type="hidden" name="restaurantId" th:value="${restaurantId}" />
+							        <button type="submit" 
+							                class="btn btn-link samuraitabelog-btn-link-style mb-4" 
+							                th:text="${isFavorited} ? '&#9829;お気に入り解除' : '&#9825;お気に入り追加'">							            
+							        </button>
+							    </form>
+                            
+                            <h1 class="mb-4 text-center" th:text="${restaurant.getName()}"></h1>                                                           
+                            
+                            <div th:if="${errorMessage}" class="alert alert-danger">
+                                <span th:text="${errorMessage}"></span>
+                            </div> 
+                            <div th:if="${successMessage}" class="alert alert-info">							
+								<span th:text="${successMessage}"></span>  
+							</div>                                                                          
+                            
+                            <div class="mb-4">
+                                <img th:if="${restaurant.getImageName()}" th:src="@{/storage/__${restaurant.getImageName()}__}" class="samuraitabelog-image-size" alt="店舗画像">
+                                <img th:unless="${restaurant.getImageName()}" th:src="@{/images/noImage.png}" class="w-100" alt="NO IMAGE">
+                            </div> 
+                            
+                            <div class="container">  
+                                <div class="row">
+                                    <div class="col-lg-8 container mb-4">            
+                                        <div class="row pb-2 mb-2 border-bottom">
+                                            <div class="col-4">
+                                                <span class="fw-bold">店名</span>
+                                            </div>
+                    
+                                            <div class="col">
+                                                <span th:text="${restaurant.getName()}"></span>
+                                            </div>
+                                        </div> 
+                                        <div class="row pb-2 mb-2 border-bottom">
+		                                    <div class="col-4">
+		                                        <span class="fw-bold">ジャンル</span>
+		                                    </div>
+		            
+		                                    <div class="col">
+		                                        <span th:text="${restaurant.getCategory().getName()}"></span>
+		                                    </div>
+		                                </div>                            
+                    
+                                        <div class="row pb-2 mb-2 border-bottom">
+                                            <div class="col-4">
+                                                <span class="fw-bold">説明</span>
+                                            </div>
+                    
+                                            <div class="col">
+                                                <span class="samuraitabelog-pre-wrap" th:text="${restaurant.getDescription()}"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row pb-2 mb-2 border-bottom">
+		                                    <div class="col-4">
+		                                        <span class="fw-bold">営業時間</span>
+		                                    </div>
+		            
+		                                    <div class="col">
+		                                    	<span th:text="${restaurant.closingTime.isBefore(restaurant.openingTime) ? restaurant.openingTime + ' ～ 翌 ' + restaurant.closingTime : restaurant.openingTime + ' ～ ' + restaurant.closingTime}"></span>
+		
+		                                    </div>
+		                                </div>
+		                                
+		                                <div class="row pb-2 mb-2 border-bottom">
+		                                    <div class="col-4">
+		                                        <span class="fw-bold">定休日</span>
+		                                    </div>
+		            
+		                                    <div class="col">
+												<ul style="list-style: none;">
+		        									<li th:each="holidayName : ${weeklyHolidayNames}" th:text="${holidayName}"></li>
+		    									</ul>
+		                                    </div>
+		                                </div> 
+                    
+		                    			<div class="row pb-2 mb-2 border-bottom">
+		                                    <div class="col-4">
+		                                        <span class="fw-bold">価格帯</span>
+		                                    </div>
+		            
+		                                    <div class="col">
+		                                        <span th:text="${#numbers.formatInteger(restaurant.getLowestPrice(), 1, 'COMMA') + ' ～ ' + #numbers.formatInteger(restaurant.getHighestPrice(), 1, 'COMMA') + ' 円'}"></span>
+		                                    </div>
+		                                </div>
+                                        
+                                       <div class="row pb-2 mb-2 border-bottom">
+                                            <div class="col-4">
+                                                <span class="fw-bold">席数</span>
+                                            </div>
+                    
+                                            <div class="col">
+                                                <span th:text="${restaurant.getNumberOfSeats() + '席'}"></span>
+                                            </div>
+                                        </div>                                
+                                        
+                                        <div class="row pb-2 mb-2 border-bottom">
+                                            <div class="col-4">
+                                                <span class="fw-bold">郵便番号</span>
+                                            </div>
+                    
+                                            <div class="col">
+                                                <span th:text="${restaurant.getPostalCode()}"></span>
+                                            </div>
+                                        </div>   
+                                        
+                                        <div class="row pb-2 mb-2 border-bottom">
+                                            <div class="col-4">
+                                                <span class="fw-bold">住所</span>
+                                            </div>
+                    
+                                            <div class="col">
+                                                <span th:text="${restaurant.getAddress()}"></span>
+                                            </div>
+                                        </div>   
+                                        
+                                        <div class="row pb-2 mb-2 border-bottom">
+                                            <div class="col-4">
+                                                <span class="fw-bold">電話番号</span>
+                                            </div>
+                    
+                                            <div class="col">
+                                                <span th:text="${restaurant.getPhoneNumber()}"></span>
+                                            </div>
+                                        </div>                                
+                                    </div>
+                                    
+<!--                                    <div sec:authorize="isAnonymous()" class="col-lg-4 px-0 ps-lg-4 mb-4">                  -->
+<!--                                        <div class="card">-->
+<!--                                            <div class="card-body">                                                                                                                                                                                                                     -->
+<!--                                                <p class="card-text">予約するには<a th:href="@{/login}">会員登録</a>が必要です。</p>                                                                                                                                            -->
+<!--                                                <button type="submit" class="btn text-white shadow-sm w-100 samuraitabelog-btn" disabled>予約する</button>                                                                                                                -->
+<!--                                            </div>-->
+<!--                                        </div>  -->
+<!--                                    </div> -->
+                                    
+<!--                                    <div sec:authorize="isAuthenticated()" class="col-lg-4 px-0 ps-lg-4 mb-4">                  -->
+<!--								        <div class="card">-->
+<!--								            <div class="card-body"> -->
+<!--								                <form method="get" th:action="@{/restaurants/__${restaurant.getId()}__/reservations/input}" th:object="${reservationInputForm}">                                                                                                                                                                       -->
+<!--								                    <div class="form-group mb-2">                                            -->
+<!--								                        <label for="fromCheckinDateToCheckoutDate" class="col-form-label text-md-left fw-bold">チェックイン・チェックアウト</label>    -->
+<!--								                        <div th:if="${#fields.hasErrors('fromCheckinDateToCheckoutDate')}" class="text-danger small mb-2" th:errors="*{fromCheckinDateToCheckoutDate}"></div>                                          -->
+<!--								                        <input type="text" class="form-control" th:field="*{fromCheckinDateToCheckoutDate}">                                                                     -->
+<!--								                    </div>-->
+								                    
+<!--								                    <div class="form-group mb-4">                                            -->
+<!--								                        <label for="numberOfPeople" class="col-form-label text-md-left fw-bold">宿泊人数</label>  -->
+<!--								                        <div th:if="${#fields.hasErrors('numberOfPeople')}" class="text-danger small mb-2" th:errors="*{numberOfPeople}"></div>                                            -->
+<!--								                        <input type="number" class="form-control" th:field="*{numberOfPeople}" min="1">                                                                     -->
+<!--								                    </div>-->
+								                                                                        
+<!--								                    <div class="form-group">-->
+<!--								                        <button type="submit" class="btn text-white shadow-sm w-100 samuraitabelog-btn">予約する</button>-->
+<!--								                    </div>-->
+<!--								                </form>                                                                     -->
+<!--								            </div>-->
+<!--								        </div>  -->
+								    </div> 
+                                                                                                                        -->
+                                <h1 class="mb-4 text-center">レビュー</h1>  
+                                <div sec:authorize="isAuthenticated()" th:if="${!hasReviewed}" class="mx-auto col-lg-4 px-0 mb-4">   
+									<a th:href="@{/restaurants/__${restaurant.getId()}__/reviews/register}" class="btn text-white shadow-sm w-100 samuraitabelog-btn">レビューを投稿する</a>
+                                </div>
+                                <div class="row row-cols-lg-2 row-cols-2 g-3 mb-4">
+									<div class="col" th:each="review : ${reviews}">
+										<div class="card h-100">
+											<div class="card-body"> 
+												<div class="d-flex align-items-center justify-content-between">
+													<h3 class="card-title" th:text="${review.user.name}"></h3>
+													<div sec:authorize="isAuthenticated()" th:if="${review.user.id == currentUser.id}" class="d-flex justify-content-end align-items-end">
+    													<a th:href="@{/restaurants/__${restaurant.getId()}__/reviews/__${review.getId()}__/edit}" class="me-2" >編集</a>
+    													<a href="#" class="samuraitabelog-link-danger" data-bs-toggle="modal" th:data-bs-target="${'#deleteReviewModal' + review.getId()}" >削除</a>
+    													<!-- 削除用モーダル -->
+				                                         <div class="modal fade" th:id="${'deleteReviewModal' + review.getId()}" tabindex="-1" th:aria-labelledby="${'deleteReviewModalLabel' + review.getId()}">
+				                                             <div class="modal-dialog">
+				                                                 <div class="modal-content">
+				                                                     <div class="modal-header">
+				                                                         <h5 class="modal-title" th:id="${'deleteReviewModalLabel' + review.getId()}" th:text="${restaurant.getName() + 'のレビューを削除してもよろしいですか？'}"></h5>
+				                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+				                                                     </div>
+				                                                     <div class="modal-footer">
+				                                                         <form method="post"th:action="@{/restaurants/__${restaurant.getId()}__/reviews/__${review.getId()}__/delete}">
+				                                                             <button type="submit" class="btn samuraitabelog-btn-danger text-white shadow-sm">削除</button>
+				                                                         </form>
+				                                                     </div>
+				                                                 </div>
+				                                             </div>
+				                                         </div>  
+    													
+  													</div>
+												</div>
+												<p class="card-text" >
+													<span class="samuraitabelog-star-full" th:each="i : ${#numbers.sequence(1, 5)}"  th:utext="${review.score} >= ${i} ? '&#9733;' : '&#9734;'"></span>
+												</p>
+												<p class="card-text mb-1">
+													<small class="text-muted" th:text="${#dates.format(review.updatedAt, 'yyyy年MM月dd日')}" ></small>
+												</p>
+												<p class="card-text" th:text="${review.impression}">													
+												</p>
+													
+											</div>
+										</div>
+									</div>
+									
+                                </div>
+                                <div th:if="${reviews.isEmpty()}" class="text-center">
+									まだレビューがありません。
+								</div>
+								<div th:unless="${reviews.isEmpty()}" class="text-center">
+									<a th:href="@{/restaurants/__${restaurant.getId()}__/reviews}" class="me-2">すべてのレビューを見る</a>
+								</div>
+<!--                                </div>                                                                                             -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div> 
+        
+        <!-- Flatpickr -->
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+        <script th:src="@{/js/flatpickr.js}"></script>    
+  </body>
+</html>

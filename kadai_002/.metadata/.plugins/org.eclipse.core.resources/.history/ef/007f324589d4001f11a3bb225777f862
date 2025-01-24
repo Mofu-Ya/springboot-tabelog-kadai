@@ -1,0 +1,11 @@
+package com.example.samuraitabelog.repository.projection;
+
+public interface UserSubscriptionProjection {
+	Integer getId();
+    String getName();
+    String getFurigana();
+    String getEmail();
+    String getInvoiceStatus();
+    Boolean getEnabled();
+
+}

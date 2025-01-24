@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="com.example.samuraitabelog.service.HolidayService"/>
+    <fullyQualifiedTypeName name="com.example.samuraitabelog.service.SubscriptionService"/>
+    <fullyQualifiedTypeName name="com.example.samuraitabelog.enums.SubscriptionStatus"/>
+    <fullyQualifiedTypeName name="com.example.samuraitabelog.repository.dto.ReservationDTO"/>
+</qualifiedTypeNameHistroy>

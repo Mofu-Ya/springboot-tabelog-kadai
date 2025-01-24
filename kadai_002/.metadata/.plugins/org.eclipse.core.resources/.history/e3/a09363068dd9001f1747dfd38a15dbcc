@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+	<head>
+		<div th:replace="~{fragment :: meta}"></div>                 
+        <div th:replace="~{fragment :: styles}"></div>
+		
+		<title>SAMURAI tabelog</title>
+	</head>
+	<body>
+		<div class="samuraitabelog-wrapper">
+             <!-- ヘッダー -->
+             <div th:replace="~{fragment :: header}"></div>
+             
+             <main>
+				 <div class="d-flex justify-content-center"> 						                                            
+                     <img class="samuraitabelog-header-photo" th:src="@{/images/header_photo.png}" alt="NAGOYAMESHI">                           
+                 </div>
+                 <div class="container pt-4 pb-5 samuraitabelog-container">
+                     <div th:if="${param.loggedIn}" class="alert alert-info">
+                         ログインしました。
+                     </div>  
+                     
+                     <div th:if="${param.loggedOut}" class="alert alert-info">
+                         ログアウトしました。
+                     </div>
+                     
+                     <div th:if="${successMessage}" class="alert alert-info">
+						 <span th:text="${successMessage}"></span>
+                     </div>
+                     
+                     <div th:if="${errorMessage}" class="alert alert-info">
+						 <span th:text="${errorMessage}"></span>
+                     </div>
+                     
+ 
+                     
+                     <div class="d-flex ">                                            
+                         <form method="get" th:action="@{/restaurants}" class="mb-5 samuraitabelog-search-form">
+                             <div class="input-group">
+                                 <input type="text" class="form-control" name="keyword" th:value="${keyword}" placeholder="店舗名">
+                                 <button type="submit" class="btn text-white shadow-sm samuraitabelog-btn">検索</button> 
+                             </div>               
+                         </form>                        
+                     </div>                                                                                                  
+                                                      
+                     <h2 class="text-center mt-1 mb-5">新着</h2>
+                     <div class="row row-cols-lg-5 row-cols-2 g-3 mb-5">                                        
+                         <div class="col" th:each="newRestaurant : ${newRestaurants}">
+                             <a th:href="@{/restaurants/__${newRestaurant.getId()}__}" class="link-dark samuraitabelog-card-link">
+                                 <div class="card h-100">                                                                        
+                                     <img th:if="${newRestaurant.getImageName()}" th:src="@{/storage/__${newRestaurant.getImageName()}__}" class="card-img-top samuraitabelog-vertical-card-image" alt="店舗画像">                                     
+                                     <img th:unless="${newRestaurant.getImageName()}" th:src="@{/images/noImage.png}" class="card-img-top samuraitabelog-vertical-card-image" alt="NO IMAGE">                                                                                                                        
+                                     <div class="card-body">                                    
+                                         <h3 class="card-title" th:text="${newRestaurant.getName()}"></h3>
+                                         <p class="card-text mb-1">
+                                             <small class="text-muted" th:text="${newRestaurant.getCategory.getName()}"></small>                                            
+                                         </p>
+                                     </div>
+                                 </div>    
+                             </a>            
+                         </div>                                               
+                     </div>
+                     
+                     <h2 class="text-center mb-5">ジャンル別</h2>
+<!--                     <div class="col col-lg-10 col-10 mb-3 justify-content-center">-->
+	
+						 <div class="row mb-3">
+							 <div class="col text-center">	
+								<a class="mb-4 p-2" th:href="@{/restaurants?categoryId=1}">                        
+                        			<img class="catgory-btn-image" th:src="@{/images/btn_category01.png}" alt="焼き鳥"></img> 	                       
+                    			</a> 
+                    			<a class="mb-4" th:href="@{/restaurants?categoryId=2}">                        
+                        			<img class="catgory-btn-image" th:src="@{/images/btn_category02.png}" alt="焼肉"></img> 	                       
+                    			</a>
+                    			<a class="mb-4" th:href="@{/restaurants?categoryId=3}">                        
+                        			<img class="catgory-btn-image" th:src="@{/images/btn_category03.png}" alt="お寿司"></img> 	                       
+                    			</a>
+								
+<!--								<img class="catgory-btn-image mb-4" th:src="@{/images/btn_category02.png}" alt="焼肉"></img>-->
+<!--								<img class="catgory-btn-image mb-4" th:src="@{/images/btn_category03.png}" alt="お寿司"></img>						 -->
+<!--								<a class="btn text-white shadow-sm category-btn samuraitabelog-btn mb-3" th:href="@{/restaurants?categoryId=1}">焼き鳥</a> -->
+<!--							 	<a class="btn text-white shadow-sm category-btn samuraitabelog-btn mb-3" th:href="@{/restaurants?categoryId=2}">焼肉</a> -->
+<!--							 	<a class="btn text-white shadow-sm category-btn samuraitabelog-btn mb-3" th:href="@{/restaurants?categoryId=3}">お寿司</a> -->
+						 	</div>
+						 </div>
+						 <div class="row mb-3">
+							<div class="col text-center">
+								<a class="mb-4" th:href="@{/restaurants?categoryId=4}">                        
+                        			<img class="catgory-btn-image" th:src="@{/images/btn_category04.png}" alt="ラーメン"></img> 	                       
+                    			</a> 
+                    			<a class="mb-4" th:href="@{/restaurants?categoryId=5}">                        
+                        			<img class="catgory-btn-image" th:src="@{/images/btn_category05.png}" alt="居酒屋"></img> 	                       
+                    			</a>
+                    			<a class="mb-4" th:href="@{/restaurants?categoryId=6}">                        
+                        			<img class="catgory-btn-image" th:src="@{/images/btn_category06.png}" alt="カフェ"></img> 	                       
+                    			</a>
+<!--								<img class="catgory-btn-image mb-3" th:src="@{/images/btn_category04.png}" alt="ラーメン"></img>-->
+<!--								<img class="catgory-btn-image mb-3" th:src="@{/images/btn_category05.png}" alt="居酒屋"></img>-->
+<!--								<img class="catgory-btn-image mb-3" th:src="@{/images/btn_category06.png}" alt="カフェ"></img>-->
+<!--								<a class="btn text-white shadow-sm category-btn samuraitabelog-btn mb-3" th:href="@{/restaurants?categoryId=4}">ラーメン</a> -->
+<!--							 	<a class="btn text-white shadow-sm category-btn samuraitabelog-btn mb-3" th:href="@{/restaurants?categoryId=5}">居酒屋</a> -->
+<!--							 	<a class="btn text-white shadow-sm category-btn samuraitabelog-btn mb-3" th:href="@{/restaurants?categoryId=6}">カフェ</a> -->
+						 	</div>
+						 </div>
+						 
+<!--                     </div>-->
+                     
+                     
+                 </div>
+             </main>
+             
+             <!-- フッター -->
+             <div th:replace="~{fragment :: footer}"></div>
+         </div>    
+         
+    	<div th:replace="~{fragment :: scripts}"></div>  
+	</body>
+</html>

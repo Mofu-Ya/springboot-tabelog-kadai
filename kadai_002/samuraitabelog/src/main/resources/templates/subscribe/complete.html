@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">    
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+          
+        <title>プラン確認・変更完了</title>   
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+<!--            <div th:replace="~{fragment :: header}"></div>-->
+            
+            <main>
+                <div class="container pt-4 pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xl-6 col-lg-8 col-md-8 col-sm-10 mt-5">                            
+                            <h1 class="mb-4 text-center">プラン確認・変更完了</h1>
+                            <div class="container d-flex justify-content-center">     
+								<div class="card confirm-card">
+									<div class="card-body confirm-card-body mt-3"> 
+										<div th:if="${isDeleteSubscripton}">
+						 					<p class="text-center">プランの解約を受付いたしました。</p>
+						 					<p class="text-center">一度ログアウト後、再度ログインしてご確認ください。</p>
+						 					<div class="d-flex justify-content-center">
+												<a class="btn shadow-sm confirm-card-btn samuraitabelog-btn" th:href="@{/logout}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                         			ログアウト
+                                     			</a>
+                                     			<form class="d-none" id="logout-form" th:action="@{/logout}" method="post"></form>                                    												
+											</div>
+                     					</div>
+                     					<div th:unless="${isDeleteSubscripton}">
+						 					<p class="text-center">以下のボタンでもとのページに戻ることができます。</p>
+											<div class="d-flex justify-content-center mt3 mb3">
+												<a class="btn shadow-sm complete-card-btn samuraitabelog-cancel-btn" th:href="@{/user}">会員ページへ戻る</a> 												
+											</div>
+											<br>
+											<p class="text-center">プランの解約が行われた場合、有効期間が終了しますと</p> 
+											<p class="text-center">ログイン時に自動でログアウトされることがあります。</p> 
+											<p class="text-center">その場合は、しばらくお待ちの後、再度ログインしなおしてください。</p> 
+                     					</div>
+<!--										<p class="text-center">以下のボタンでもとのページに戻ることができます。</p>-->
+<!--											<div class="d-flex justify-content-center">-->
+<!--												<a class="btn shadow-sm complete-card-btn samuraitabelog-cancel-btn" th:href="@{/user}">会員ページへ戻る</a> 												-->
+<!--											</div>-->
+<!--										<p class="text-center">プランの解約が行われた場合、自動でログアウトされます。</p> -->
+<!--										<p class="text-center">その場合は、しばらくお待ちの後、再度ログインしなおしてください。</p> 										-->
+									</div>
+								</div> 
+                            </div>     
+							                            
+                        </div>
+                    </div>
+                </div>  
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div>  
+  </body>
+</html>

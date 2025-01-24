@@ -1,0 +1,278 @@
+html {
+  font-size: 14px;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;  
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  	font-size: 1.475rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+}
+
+a {
+/*  color: #5196a6;*/
+  color: #005133;
+  text-decoration: none !important;
+}
+
+a:hover {
+    color: #407784;
+}
+
+footer {
+  width: 100%;
+  height: 60px;
+  position: absolute;
+  bottom: 0;    
+  background-color: #f2f0eb;
+}
+
+.samuraitabelog-wrapper {
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 60px;
+  box-sizing: border-box;
+}
+
+.samuraitabelog-navbar {
+  min-height: 60px;
+}
+
+.samuraitabelog-logo {
+  height: 50px;  
+}
+
+
+.samuraitabelog-btn {
+/*  background-color: #5196a6 !important;   */
+  background-color: #FFC40C !important;   
+  transition: 0.1s;
+}
+
+.samuraitabelog-btn:hover {
+  opacity: 0.8;   
+}
+
+.samuraitabelog-page-link {
+/*  color: #5196a6;*/
+  color: #FFC40C;;
+}
+
+.samuraitabelog-page-link:hover {
+  color: #407784;
+}
+
+.samuraitabelog-active {
+/*  background-color: #5196a6 !important;*/
+/*  border-color: #5196a6 !important;*/
+  background-color: #FFC40C !important;
+  border-color: #FFC40C !important;
+}
+
+.samuraitabelog-pre-wrap {
+	/* 改行文字で行を折り返す */
+	white-space: pre-wrap;
+}
+
+.samuraitabelog-link-danger {
+     color: #f2594b;
+ }
+ 
+ .samuraitabelog-link-danger:hover {
+     color: #a63c3c;
+ }
+ 
+ .samuraitabelog-btn-danger {
+     background-color: #f2594b !important;
+     transition: 0.1s;
+ }
+ 
+ .samuraitabelog-btn-danger:hover {
+   opacity: 0.8;   
+ }
+
+.samuraitabelog-dropdown-item:active {
+   background-color: #5196a6;
+ }
+ 
+.samuraitabelog-card-link {
+	transition: 0.3s;
+}
+
+.samuraitabelog-card-link:hover {
+	opacity: 0.7;
+}
+
+.samuraitabelog-horizontal-card-image {
+	width: 100%;
+	height: 240px;
+	object-fit: cover;
+}
+
+.samuraitabelog-sort-box {
+   width: 150px;
+ }
+ 
+.samuraitabelog-vertical-card-image {
+   width: 100%;
+   height: 150px;
+   object-fit: cover;
+}
+ 
+ .samuraitabelog-search-form {
+     max-width: 300px;
+ }
+ 
+ .samuraitabelog-timepicker-form {
+     height: 34px;
+/*     border-color: lightgrey;*/
+     border: 1px solid lightgrey;
+     border-radius: 4px;     
+     padding: 10px;
+ }
+ 
+ /* ベースのFlatpickrスタイルをカスタマイズ */
+.flatpickr-time {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+/*    font-family: 'Arial', sans-serif;*/
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: #f7f9fc;
+/*    background-color:red;*/
+    border-radius: 8px;
+    padding: 10px;
+/*    width: 200px;*/
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* 外枠を見切れさせない */
+}
+
+/* 不要な分・秒を非表示 */
+.flatpickr-time .flatpickr-minute {
+    display: none !important; /* 完全に非表示にする */
+}
+
+/*.flatpickr-time .flatpickr-minute .arrow {*/
+/*    display: none !important;  完全に非表示にする */
+/*}*/
+
+
+/* 時間選択の各要素 */
+.flatpickr-time .flatpickr-hour　{
+    width: 70px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+/*    border: 1px solid red;*/
+    background-color: white;
+    text-align: center;
+    font-size: 1.2rem;
+/*    font-weight: bold;*/
+    line-height: 40px;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease-in-out;
+}
+
+/* 選択中の要素 */
+.flatpickr-time .flatpickr-hour:hover,
+.flatpickr-time .flatpickr-minute:hover,
+.flatpickr-time .flatpickr-second:hover,
+.flatpickr-time .flatpickr-am-pm:hover {
+    background-color: #eaf3ff;
+    color: #007bff;
+    transform: scale(1.1);
+}
+
+/* ドラムロールのエフェクト風 */
+.flatpickr-time .flatpickr-hour,
+.flatpickr-time .flatpickr-minute,
+.flatpickr-time .flatpickr-second {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: auto;
+}
+
+/* 確認画面の Card のスタイル */
+.confirm-card {
+	width: 90%; 
+	max-width: 600px;
+}
+
+.confirm-card-body {
+	padding: 20px;
+}
+
+.confirm-card-btn {
+	width: 120px;
+}
+
+.complete-card-btn {
+	width: 180px;
+}
+
+.category-btn {
+	width: 240px;
+	height: 60px;
+}
+
+
+.samuraitabelog-cancel-btn {
+	color: #FFC40C !important; 
+	background-color: white !important; 
+	border: 1px solid #FFC40C;  
+  	transition: 0.1s;	
+}
+
+.samuraitabelog-cancel-btn:hover {
+	color:  #191C16 !important;
+	background-color: #B4BBAB !important;
+	border: 1px solid #FFC40C; 
+  	opacity: 0.6;   
+}
+
+/*.flatpickr-time .flatpickr-hour:before,*/
+/*.flatpickr-time .flatpickr-minute:before,*/
+/*.flatpickr-time .flatpickr-second:before {*/
+/*    content: "";*/
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    width: 100%;*/
+/*    height: 50%;*/
+/*    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));*/
+/*    z-index: 1;*/
+/*}*/
+
+/*.flatpickr-time .flatpickr-hour:after,*/
+/*.flatpickr-time .flatpickr-minute:after,*/
+/*.flatpickr-time .flatpickr-second:after {*/
+/*    content: "";*/
+/*    position: absolute;*/
+/*    bottom: 0;*/
+/*    width: 100%;*/
+/*    height: 50%;*/
+/*    background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));*/
+/*    z-index: 1;*/
+/*}*/
+
+
+@media screen and (min-width: 1400px) {
+  .samuraitabelog-container {
+    max-width: 1200px;
+  }
+}

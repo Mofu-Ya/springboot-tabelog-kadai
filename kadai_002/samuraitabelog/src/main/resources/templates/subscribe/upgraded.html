@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">    
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+          
+        <title>アップグレード完了</title>   
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+<!--            <div th:replace="~{fragment :: header}"></div>-->
+            
+            <main>
+                <div class="container pt-4 pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xl-6 col-lg-8 col-md-8 col-sm-10">                                        
+                            <h1 class="mt-5 mb-4 text-center">アップグレード完了</h1>
+                            <div class="container d-flex justify-content-center">     
+								<div class="card confirm-card">
+									<div class="card-body confirm-card-body mt-3"> 
+										<p class="text-center">プランのアップグレードを受付いたしました。</p>
+						 				<p class="text-center">一度ログアウト後、再度ログインしてご確認ください。</p>
+						 				<div class="d-flex justify-content-center">
+											<a class="btn mt-3 mb-2 shadow-sm w-25 text-white samuraitabelog-btn" th:href="@{/logout}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                         		ログアウト
+                                     		</a>
+                                     		<form class="d-none" id="logout-form" th:action="@{/logout}" method="post"></form>                                    												
+										</div>
+																			
+									</div>
+								</div> 
+                            </div>     
+							                            
+                        </div>
+                    </div>
+                </div>  
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div>  
+  </body>
+</html>

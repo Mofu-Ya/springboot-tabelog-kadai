@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">    
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+          
+        <title>会員情報</title>   
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+            <div th:replace="~{fragment :: header}"></div>
+            
+            <main>
+                <div class="container pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xl-5 col-lg-6 col-md-8">
+                            <nav class="my-3" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0"> 
+                                    <li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>                       
+                                    <li class="breadcrumb-item active" aria-current="page">会員情報</li>
+                                </ol>
+                            </nav> 
+                            
+                            <h1 class="mb-3 text-center">会員情報</h1> 
+                            
+                            <div th:if="${param.purchased}" class="alert alert-info">
+                                有料プランへのアップグレード申し込みを受付ました。<br>
+                                アップグレードが完了するまで、少々お待ちください。
+                            </div>  
+                            <div th:if="${param.returned}" class="alert alert-info">
+                                サブスクリプションの確認・変更が完了しました。
+                            </div>   
+                            
+                            <div class="d-flex justify-content-end align-items-end mb-3">                    
+                                <div>
+                                    <a th:href="@{/user/edit}">編集</a>                        
+                                </div>
+                            </div>                                       
+                            
+                            <div th:if="${successMessage}" class="alert alert-info">
+                                <span th:text="${successMessage}"></span>
+                            </div>                               
+                            
+                            <div class="container mb-4">
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">氏名</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getName()}"></span>
+                                    </div>
+                                </div>                    
+            
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">フリガナ</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getFurigana()}"></span>
+                                    </div>
+                                </div>  
+                                
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">性別</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getGender().getName()}"></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">職業</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getOccupation().getName()}"></span>
+                                    </div>
+                                </div>          
+                                
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">郵便番号</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getPostalCode()}"></span>
+                                    </div>
+                                </div>   
+                                
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">住所</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getAddress()}"></span>
+                                    </div>
+                                </div>
+            
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">電話番号</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getPhoneNumber()}"></span>
+                                    </div>
+                                </div>  
+                                
+                                <div class="row pb-2 mb-2 border-bottom">
+                                    <div class="col-4">
+                                        <span class="fw-bold">メールアドレス</span>
+                                    </div>
+            
+                                    <div class="col">
+                                        <span th:text="${user.getEmail()}"></span>
+                                    </div>
+                                </div>
+                                
+                                <br>
+	                            <div class="row pb-2 mb-2 border-bottom">
+	                                <div class="col-4">
+	                                    <span class="fw-bold">加入プラン</span>
+	                                </div>
+	        
+	                                <div class="col">
+	                                    <span th:text="${user.getPlanType().getName()}"></span>
+	                                </div>
+	                                
+	                                <div class="col">
+	                                    <a class="btn text-white shadow-sm w-100 samuraitabelog-btn" sec:authorize="hasRole('GENERAL_FREE')" th:href="@{/subscribe/confirm}">アップグレード</a>
+	                                    <a class="btn text-white shadow-sm w-100 samuraitabelog-btn" sec:authorize="hasRole('GENERAL_PAID')" th:href="@{/subscribe/customer}">プランの確認・変更</a>
+	                                </div>
+                                </div>                               
+                            </div>                                                                                                                           
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div>  
+  </body>
+</html>

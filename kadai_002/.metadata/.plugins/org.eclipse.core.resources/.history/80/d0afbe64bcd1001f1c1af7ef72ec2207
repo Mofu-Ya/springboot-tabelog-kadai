@@ -1,0 +1,447 @@
+package com.example.samuraitabelog.service;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.example.samuraitabelog.entity.PlanType;
+import com.example.samuraitabelog.entity.SubscriptionEntity;
+import com.example.samuraitabelog.entity.User;
+import com.example.samuraitabelog.enums.InvoiceStatus;
+import com.example.samuraitabelog.enums.SubscriptionStatus;
+import com.example.samuraitabelog.repository.PlanTypeRepository;
+import com.example.samuraitabelog.repository.SubscriptionRepository;
+import com.example.samuraitabelog.repository.UserRepository;
+import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Event;
+import com.stripe.model.Invoice;
+import com.stripe.model.StripeObject;
+import com.stripe.model.Subscription;
+import com.stripe.model.checkout.Session;
+import com.stripe.param.checkout.SessionCreateParams;
+import com.stripe.param.checkout.SessionRetrieveParams;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+@Service
+public class StripeService {
+	@Value("${stripe.api-key}")
+	private String stripeApiKey;
+	
+    @Value("${stripe.price_id}")
+    private String priceId;
+    
+	private final SubscriptionService subscriptionService;
+	private final SubscriptionRepository subscriptionRepository;
+	private final UserRepository userRepository;
+	private final PlanTypeRepository planTypeRepository;
+	
+	public StripeService(SubscriptionService subscriptionService, SubscriptionRepository subscriptionRepository, UserRepository userRepository, PlanTypeRepository planTypeRepository) {
+		this.subscriptionService = subscriptionService;
+		this.subscriptionRepository = subscriptionRepository;
+		this.userRepository = userRepository;
+		this.planTypeRepository = planTypeRepository;
+	}
+	
+	
+	// セッションを作成し、Stripeに必要な情報を返す
+	public String createStripeSession(User user, HttpServletRequest httpServletRequest) {
+		Stripe.apiKey = stripeApiKey;
+		String requestUrl = new String(httpServletRequest.getRequestURL());
+		SessionCreateParams params = 
+			SessionCreateParams.builder()
+				.addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+				.setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+				.setSuccessUrl(requestUrl.replace("/subscribe/confirm", "") + "/user?purchased")
+				.setCancelUrl(requestUrl.replace("/subscribe/confirm", "") + "/user")
+				.setCustomerEmail(user.getEmail())
+//				.setCustomerCreation(SessionCreateParams.CustomerCreation.ALWAYS)
+				.addLineItem(
+					SessionCreateParams.LineItem.builder()
+						.setPrice(priceId) 
+						.setQuantity(1L)
+						.build())
+				.setAutomaticTax(SessionCreateParams.AutomaticTax.builder()
+				        .setEnabled(true)
+				        .build())
+				.putMetadata("userId", user.getId().toString())				
+			.build();
+		try {
+			Session session = Session.create(params);
+			return session.getId();
+		} catch (StripeException e) {
+			e.printStackTrace();
+			return "";
+		}
+		
+	}
+	
+	// セッションから userId を取得し、アップグレード処理を行う
+	public void processSessionCompleted(Event event) {
+		Optional<StripeObject> optionalStripeObject = event.getDataObjectDeserializer().getObject();
+		
+		optionalStripeObject.ifPresentOrElse(stripeObject -> {
+			Session session = (Session)stripeObject;
+
+			Map<String, String> metadata = session.getMetadata();
+			String userId = metadata.get("userId");
+			
+			String customerId = session.getCustomer();
+			String subscriptionId = session.getSubscription();
+			User user = userRepository.getReferenceById(Integer.valueOf(userId));
+			PlanType planType = user.getPlanType();
+			List<SubscriptionEntity> subscriptionEntities = subscriptionRepository.findAllByCustomerIdAndSubscriptionId(customerId, subscriptionId);
+			
+			// subscriptions テーブルは、user ID, customer ID, subscription ID の組み合わせごとにひとつ
+			if(subscriptionEntities !=  null) {
+				for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {
+					// 無料プランの場合、アップグレード処理を行う
+					if(subscriptionEntity.getEnabled() 
+							&& (subscriptionEntity.getUser() == null)
+							&& (planType.getId() == planTypeRepository.findByName("フリー").getId())) {
+						subscriptionService.upgrade(subscriptionEntity.getId(), user.getId());
+						System.out.println("アップグレード処理が成功しました。");
+						System.out.println("Stripe API Version: " + event.getApiVersion());
+						System.out.println("stripe-java Version: " + Stripe.VERSION);
+						return;
+					}					
+		        }
+			}			
+			
+			// サブスク購入以外のセッションの場合は何もしない
+			System.out.println("セッション完了処理が成功しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		},
+		() -> {
+			System.out.println("セッション完了処理が失敗しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		});
+	}
+	
+	// サブスクリプションの作成時に受信。サブスクリプション登録処理を行う
+	public void subscriptionCreated(Event event) {
+		Optional<StripeObject> optionalStripeObject = event.getDataObjectDeserializer().getObject();
+		
+		// サブスクリプション作成時は、subscriptions テーブルがまだ作成されていないはず
+		// 受信の順番によっては、こちらで登録になるかも
+		optionalStripeObject.ifPresentOrElse(stripeObject -> {
+			Subscription subscription = (Subscription)stripeObject;			
+			
+	        String subscriptionId = subscription.getId();
+	        String customerId = subscription.getCustomer();
+	        String priceId = subscription
+	                .getItems()
+	                .getData()
+	                .get(0) // 最初のアイテムを取得
+	                .getPrice()
+	                .getId();
+			
+			List<SubscriptionEntity> subscriptionEntities = subscriptionRepository.findAllByCustomerIdAndSubscriptionId(customerId, subscriptionId);
+			
+			if(subscriptionEntities ==  null) {
+				// サブスクリプション作成時は、subscriptions テーブルがまだ作成されていない
+				subscriptionService.create(subscriptionId, customerId, priceId);
+			} else {
+				// subscriptions テーブルがある場合は何もしない
+				System.out.println("既にデータがあるため、サブスクリプション登録処理をスキップしました。");
+				return;
+			}
+												
+			System.out.println("サブスクリプション登録処理が成功しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		},
+		() -> {
+			System.out.println("サブスクリプション登録処理が失敗しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		});
+	}
+		
+	// サブスクリプションの作成、更新、解約時に受信。ステータスを保存し、解約の場合は解約処理を行う
+	public void subscriptionUpdated(Event event) {
+		Optional<StripeObject> optionalStripeObject = event.getDataObjectDeserializer().getObject();
+		
+		optionalStripeObject.ifPresentOrElse(stripeObject -> {
+			Subscription subscription = (Subscription)stripeObject;			
+			
+	        String subscriptionId = subscription.getId();
+	        String customerId = subscription.getCustomer();
+	        String priceId = subscription
+	                .getItems()
+	                .getData()
+	                .get(0) // 最初のアイテムを取得
+	                .getPrice()
+	                .getId();
+			String status = subscription.getStatus();  
+			
+			List<SubscriptionEntity> subscriptionEntities = subscriptionRepository.findAllByCustomerIdAndSubscriptionId(customerId, subscriptionId);
+			
+			// Subscriptionステータスの更新のみ
+			if(subscriptionEntities !=  null) {
+				for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {
+					if(subscriptionEntity.getEnabled()) {
+						subscriptionService.subscriptionUpdate(subscriptionEntity.getId(), priceId, status);
+					} else {
+						// 無効なサブスクリプションがある場合は、今後の拡張でサブスク回復処理を検討 TODO
+						
+					}
+		        }				
+			}
+//			if(status == SubscriptionStatus.ACTIVE.getCode()) {
+//				if(subscriptionEntities !=  null) {
+//					for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {
+//						User user = subscriptionEntity.getUser();
+//						PlanType planType = user.getPlanType();
+//						if(subscriptionEntity.getEnabled() && 
+//								(planType.getId() == planTypeRepository.findByName("フリー").getId())) {
+//							// ステータスが active で無料会員の場合、アップグレード処理を行う
+//							subscriptionService.upgrade(subscriptionEntity.getId(), user.getId(), priceId, status);
+//						} else {
+//							// ステータスが canceled 以外で無効なサブスクリプションがある場合はサブスク回復処理
+//							
+//						}
+//			        }
+//				}								
+//			} else if(status == SubscriptionStatus.CANCELED.getCode()) {
+//				// ステータスが canceled の場合、解約処理を行う
+//				if(subscriptionEntities == null) {
+//					// サブスクリプションがない場合は何もしない
+//					System.out.println("サブスクリプション更新処理をスキップしました。");
+//					return;
+//				}
+//				
+//				// 解約処理 TODO
+//				
+//			} else {
+//				if(subscriptionEntities !=  null) {
+//					for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {						
+//						if(subscriptionEntity.getEnabled()) {
+//							// 有効なサブスクリプションがある場合はステータス保存
+//							subscriptionService.subscriptionUpdate(subscriptionEntity.getId(), priceId, status);
+//						} 
+//			        }
+//				}								
+//			}
+						
+			System.out.println("サブスクリプション更新処理が成功しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		},
+		() -> {
+			System.out.println("サブスクリプション更新処理が失敗しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		});
+	}
+	
+	// サブスクリプションが Stripe 上で削除、自動解約された場合は、解約処理を行う
+	public void subscriptionDeleted(Event event) {
+		Optional<StripeObject> optionalStripeObject = event.getDataObjectDeserializer().getObject();
+		
+		// サブスクリプション作成時は、subscriptions テーブルがまだ作成されていない可能性があるため、
+		// subscriptions テーブルに subscriptionId が存在しなければ無視とする
+		// 受信の順番によっては、こちらで登録になるかも
+		optionalStripeObject.ifPresentOrElse(stripeObject -> {
+			Subscription subscription = (Subscription)stripeObject;
+			SessionRetrieveParams params = 
+					SessionRetrieveParams.builder()
+					.addExpand("subscription")
+					.build();
+			
+			
+			// subscription ID, customer ID, price ID を取得
+	        String subscriptionId = subscription.getId();
+	        String customerId = subscription.getCustomer();
+	        String priceId = subscription
+	                .getItems()
+	                .getData()
+	                .get(0) // 最初のアイテムを取得
+	                .getPrice()
+	                .getId();
+			String status = subscription.getStatus();  
+			
+			List<SubscriptionEntity> subscriptionEntities = subscriptionRepository.findAllByCustomerIdAndSubscriptionId(customerId, subscriptionId);
+			
+			
+			if(status == SubscriptionStatus.ACTIVE.getCode()) {
+				if(subscriptionEntities !=  null) {
+					for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {
+						User user = subscriptionEntity.getUser();
+						PlanType planType = user.getPlanType();
+						if(subscriptionEntity.getEnabled() && 
+								(planType.getId() == planTypeRepository.findByName("フリー").getId())) {
+							// ステータスが active で無料会員の場合、アップグレード処理を行う
+							subscriptionService.upgrade(subscriptionEntity.getId(), user.getId(), priceId, status);
+						} else {
+							// ステータスが canceled 以外で無効なサブスクリプションがある場合はサブスク回復処理
+							
+						}
+			        }
+				}								
+			} else if(status == SubscriptionStatus.CANCELED.getCode()) {
+				// ステータスが canceled の場合、解約処理を行う
+				if(subscriptionEntities == null) {
+					// サブスクリプションがない場合は何もしない
+					System.out.println("サブスクリプション更新処理をスキップしました。");
+					return;
+				}
+				
+				// 解約処理 TODO
+				
+			} else {
+				if(subscriptionEntities !=  null) {
+					for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {						
+						if(subscriptionEntity.getEnabled()) {
+							// 有効なサブスクリプションがある場合はステータス保存
+							subscriptionService.subscriptionUpdate(subscriptionEntity.getId(), priceId, status);
+						} 
+			        }
+				}								
+			}
+						
+			System.out.println("サブスクリプション更新処理が成功しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		},
+		() -> {
+			System.out.println("サブスクリプション更新処理が失敗しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		});
+	}
+	
+	// 支払い更新処理。支払いが完了していたら最終支払い日の更新を行う
+	public void paymentSucceeded(Event event) {
+		Optional<StripeObject> optionalStripeObject = event.getDataObjectDeserializer().getObject();
+		
+		optionalStripeObject.ifPresentOrElse(stripeObject -> {
+			Invoice invoice = (Invoice)stripeObject;			
+			SessionRetrieveParams params = 
+					SessionRetrieveParams.builder()
+					.addExpand("invoice")
+					.build();
+			
+	        String subscriptionId = invoice.getSubscription();	        						
+			String customerId = invoice.getCustomer();
+			String priceId = invoice
+	                .getLines()
+	                .getData()
+	                .get(0) // 最初のアイテムを取得
+	                .getPrice()
+	                .getId();
+			String status = invoice.getStatus();
+			Long paymentTimestamp = invoice.getStatusTransitions().getPaidAt();
+			LocalDateTime paymentDateTime = Instant.ofEpochSecond(paymentTimestamp)
+			        .atZone(ZoneId.systemDefault())
+			        .toLocalDateTime(); // UNIXタイムスタンプを変換
+			
+			LocalDateTime paramDateTime = null;
+			List<SubscriptionEntity> subscriptionEntities = subscriptionRepository.findAllByCustomerIdAndSubscriptionId(customerId, subscriptionId);
+						
+			
+			if(subscriptionEntities !=  null) {
+				for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {
+					User user = subscriptionEntity.getUser();
+					PlanType planType = user.getPlanType();
+					
+					if(subscriptionEntity.getEnabled() && 
+							(priceId == planType.getPriceId())) {
+						if(status == InvoiceStatus.PAID.getCode()) {
+							// ステータスが paid で Price ID が正しい場合、payment 更新処理を行う
+							subscriptionService.paymentUpdate(subscriptionEntity.getId(), status, paymentDateTime);
+						} else {
+							// ステータスが paid 以外の場合は、ステータス更新のみ行う
+							subscriptionService.paymentUpdate(subscriptionEntity.getId(), status, null);
+						}														
+					} 
+		        }
+			} else {
+				// サブスクリプションがない場合は何もしない
+				System.out.println("支払い更新処理をスキップしました。");
+				return;
+			}			 
+					
+			System.out.println("支払い更新処理が成功しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		},
+		() -> {
+			System.out.println("支払い更新処理が失敗しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		});
+	}
+	
+	// 支払い失敗処理。invoice status の更新を行う
+	public void paymentFailure(Event event) {
+		Optional<StripeObject> optionalStripeObject = event.getDataObjectDeserializer().getObject();
+		
+		optionalStripeObject.ifPresentOrElse(stripeObject -> {
+			Invoice invoice = (Invoice)stripeObject;			
+			SessionRetrieveParams params = 
+					SessionRetrieveParams.builder()
+					.addExpand("invoice")
+					.build();
+			
+	        String subscriptionId = invoice.getSubscription();	        						
+			String customerId = invoice.getCustomer();
+			String priceId = invoice
+	                .getLines()
+	                .getData()
+	                .get(0) // 最初のアイテムを取得
+	                .getPrice()
+	                .getId();
+			String status = invoice.getStatus();
+			Long paymentTimestamp = invoice.getStatusTransitions().getPaidAt();
+			LocalDateTime paymentDateTime = Instant.ofEpochSecond(paymentTimestamp)
+			        .atZone(ZoneId.systemDefault())
+			        .toLocalDateTime(); // UNIXタイムスタンプを変換
+			
+			LocalDateTime paramDateTime = null;
+			List<SubscriptionEntity> subscriptionEntities = subscriptionRepository.findAllByCustomerIdAndSubscriptionId(customerId, subscriptionId);
+						
+			
+			if(subscriptionEntities !=  null) {
+				for (SubscriptionEntity subscriptionEntity : subscriptionEntities) {
+					User user = subscriptionEntity.getUser();
+					PlanType planType = user.getPlanType();
+					
+					if(subscriptionEntity.getEnabled() && 
+							(priceId == planType.getPriceId())) {
+						if(status == InvoiceStatus.PAID.getCode()) {
+							// ステータスが paid で Price ID が正しい場合、payment 更新処理を行う
+							subscriptionService.paymentUpdate(subscriptionEntity.getId(), status, paymentDateTime);
+						} else {
+							// ステータスが paid 以外の場合は、ステータス更新のみ行う
+							subscriptionService.paymentUpdate(subscriptionEntity.getId(), status, null);
+						}														
+					} 
+		        }
+			} else {
+				// サブスクリプションがない場合は何もしない
+				System.out.println("支払い更新処理をスキップしました。");
+				return;
+			}			 
+					
+			System.out.println("支払い更新処理が成功しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		},
+		() -> {
+			System.out.println("支払い更新処理が失敗しました。");
+			System.out.println("Stripe API Version: " + event.getApiVersion());
+			System.out.println("stripe-java Version: " + Stripe.VERSION);
+		});
+	}
+}
+

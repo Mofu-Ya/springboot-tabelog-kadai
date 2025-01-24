@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+        
+        <title>民宿登録</title>       
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+            <div th:replace="~{fragment :: header}"></div>
+            
+            <main>
+                <div class="container pt-4 pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xl-5 col-lg-6 col-md-8">
+                            <nav class="mb-4" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+									<li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/restaurants}">店舗一覧</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/restaurants/__${restaurant.getId()}__}">店舗詳細</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">レビュー編集</li> 
+                                </ol>
+                            </nav> 
+                            
+                            <h1 class="mb-4 text-center" th:text="${restaurant.getName() + 'のレビュー編集'}"></h1>     
+                            
+                            <form method="post" th:action="@{/reviews/__${reviewEditForm.getId()}__/update}" th:object="${reviewEditForm}" enctype="multipart/form-data">                                                            
+                                <input type="hidden" th:field="*{id}">
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="score" class="col-form-label text-md-left fw-bold">評価	</label>
+                                    </div>
+                                    <div class="col-md-8">  
+										<div th:if="${#fields.hasErrors('score')}" class="text-danger small mb-2" th:errors="*{score}"></div>										
+							            <select id="score" name="score" class="form-select samuraitabelog-star-full" th:field="*{score}" autofocus>
+							                <option value="1" class="samuraitabelog-star-full">&#9733;</option>
+							                <option value="2" class="samuraitabelog-star-full">&#9733;&#9733;</option>
+							                <option value="3" class="samuraitabelog-star-full">&#9733;&#9733;&#9733;</option>
+							                <option value="4" class="samuraitabelog-star-full">&#9733;&#9733;&#9733;&#9733;</option>
+							                <option value="5" class="samuraitabelog-star-full">&#9733;&#9733;&#9733;&#9733;&#9733;</option>
+							            </select>                                                                 
+                                    </div>
+                                </div>  
+                                
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="impression" class="col-form-label text-md-left fw-bold">コメント</label>
+                                    </div>
+                                    <div class="col-md-8">                            
+                                        <div th:if="${#fields.hasErrors('impression')}" class="text-danger small mb-2" th:errors="*{impression}"></div>                                        
+                                        <textarea class="form-control" th:field="*{impression}" cols="30" rows="5"></textarea>
+                                    </div>
+                                </div>                                                                              
+                                
+                                <div class="form-group d-flex justify-content-center">
+									<div class="d-flex justify-content-center mt-3">
+									<a class="btn shadow-sm btn-w160 samuraitabelog-cancel-btn mx-4" th:href="@{/restaurants/__${restaurant.getId()}__}">キャンセル</a> 
+                                    <button type="submit" class="btn text-white shadow-sm btn-w160 samuraitabelog-btn mx-4">更新</button>
+									</div>
+                                </div>
+                            </form>                                                                         
+                        </div>
+                    </div>
+                </div>                
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div>  
+        <script th:src="@{/js/preview.js}"></script>     
+    </body>
+</html>

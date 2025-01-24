@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">    
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+          
+        <title>退会確認</title>   
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+            <div th:replace="~{fragment :: header}"></div>
+            
+            <main>
+                <div class="container pt-4 pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xl-6 col-lg-8 col-md-8 col-sm-10">
+                            <nav class="mb-4" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/user}">会員情報</a></li>                                    
+                                    <li class="breadcrumb-item active" aria-current="page">退会</li>
+                                </ol>
+                            </nav>
+            
+                            <h1 class="mb-4 text-center">退会確認</h1>
+                            <div class="container d-flex justify-content-center">     
+								<div class="card confirm-card">
+									<div class="card-body confirm-card-body mt-3"> 										
+										<p class="text-center fw-bold" th:text="'ご加入のプラン　　　　' + ${user.planType.name}"></p> 
+										<p class="text-center">これまでサービスのご利用、誠にありがとうございました。</p>
+										<p class="text-center">退会処理を行いますか？</p>
+										<p class="text-center">有料プランにご加入の場合は、まず請求マイページでプランの解約を行ってから、再度退会処理を行ってください。</p>
+																					
+										<div sec:authorize="hasRole('GENERAL_PAID')" class="d-flex justify-content-center">
+											<a class="btn shadow-sm confirm-card-btn samuraitabelog-cancel-btn" th:href="@{/user}">キャンセル</a> 
+											<button id="paymentButton" class="btn text-white shadow-sm confirm-card-btn samuraitabelog-btn">請求マイページへ</button>  
+										</div>
+										
+										<div sec:authorize="hasRole('GENERAL_FREE')" class="d-flex justify-content-center my-4">
+											<a class="btn shadow-sm btn-w160 samuraitabelog-cancel-btn  mx-4" th:href="@{/user}">キャンセル</a> 
+											<button id="paymentButton" class="btn text-white shadow-sm btn-w160 samuraitabelog-btn  mx-4">退会する</button>  
+										</div>
+									</div>
+								</div> 
+                            </div>     
+							                            
+                        </div>
+                    </div>
+                </div>  
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div>  
+        <script src="https://js.stripe.com/v3"></script>
+        <script th:inline="javascript">
+			const sessionId = /*[[${sessionId}]]*/"sessionId";  
+		</script>	
+		<script th:src="@{/js/stripe.js}"></script>
+  </body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <head>
+        <div th:replace="~{fragment :: meta}"></div>   
+             
+        <div th:replace="~{fragment :: styles}"></div>
+        
+        <title>予約入力</title>       
+    </head>
+    <body>
+        <div class="samuraitabelog-wrapper">
+            <!-- ヘッダー -->
+            <div th:replace="~{fragment :: header}"></div>
+            
+            <main>
+                <div class="container pt-4 pb-5 samuraitabelog-container">
+                    <div class="row justify-content-center">
+                        <div class="col-xl-5 col-lg-6 col-md-8">
+                            <nav class="mb-4" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+									<li class="breadcrumb-item"><a th:href="@{/}">ホーム</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/restaurants}">店舗一覧</a></li>
+                                    <li class="breadcrumb-item"><a th:href="@{/restaurants/__${restaurant.getId()}__}">店舗詳細</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">予約入力</li> 
+                                </ol>
+                            </nav> 
+                            
+                            <h1 class="mb-4 text-center" th:text="${restaurant.getName() + 'の予約'}"></h1>     
+                            
+                            <form method="post" th:action="@{/restaurants/__${restaurant.getId()}__/reservation/create}" th:object="${reservationRegisterForm}" enctype="multipart/form-data">                                                            
+                                
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="bookingDate" class="col-form-label text-md-left fw-bold">予約日</label>
+                                    </div> 
+                                    <div class="col-md-8">
+                                        <div th:if="${#fields.hasErrors('bookingDate')}" class="text-danger small mb-2" th:errors="*{bookingDate}"></div>
+                                        <input id="bookingDatePicker" th:field="*{bookingDate}"　class="samuraitabelog-timepicker-form"placeholder="-- 00:00 ～ 23:00 --">
+<!--                                        <input type="number" class="form-control" th:field="*{lowestPrice}">                                -->
+                                    </div>                                    
+                                </div>
+                                
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="bookingTime" class="col-form-label text-md-left fw-bold">入店時刻</label>
+                                    </div> 
+                                    <div class="col-md-8">
+                                        <div th:if="${#fields.hasErrors('bookingTime')}" class="text-danger small mb-2" th:errors="*{bookingTime}"></div>
+                                        <input id="bookingTimePicker" th:field="*{bookingTime}"　class="samuraitabelog-timepicker-form"placeholder="-- 00:00 ～ 23:00 --">
+<!--                                        <input type="number" class="form-control" th:field="*{lowestPrice}">                                -->
+                                    </div>                                    
+                                </div>
+                                
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="reservationTime" class="col-form-label text-md-left fw-bold">予約時間</label>
+                                    </div> 
+                                    <div class="col-md-8">
+                                        <div th:if="${#fields.hasErrors('reservationTime')}" class="text-danger small mb-2" th:errors="*{reservationTime}"></div>
+                                        <input id="reservationTimePicker" th:field="*{reservationTime}"　class="samuraitabelog-timepicker-form" placeholder="-- 00:00 ～ 翌23:00 --">
+<!--                                        <input type="number" class="form-control" th:field="*{lowestPrice}">                                -->                                    	
+                                    </div>                                    
+                                </div>
+                                
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="isCrossDay" class="col-form-label text-md-left fw-bold">日またぎ</label>
+                                    </div> 
+                                    <div class="col-md-8">
+										<p>予約した時間内に日をまたぐ場合は、必ず以下にチェックを入れてください。</p><br>
+                                        <div th:if="${#fields.hasErrors('isCrossDay')}" class="text-danger small mb-2" th:errors="*{isCrossDay}"></div>
+						                <input class="form-check-input" type="checkbox" id="isCrossDay" th:field="*{isCrossDay}">
+						                <span th:text="予約した時間内に日をまたぐ"></span>
+                                    </div>                                    
+                                </div>
+                                                                                          
+                                                                
+                                <div class="form-group row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="numberOfPeople" class="col-form-label text-md-left fw-bold">予約人数</label>
+                                    </div> 
+                                    <div class="col-md-8">
+                                        <div th:if="${#fields.hasErrors('numberOfPeople')}" class="text-danger small mb-2" th:errors="*{numberOfPeople}"></div>
+                                        <input type="number" class="form-control" th:field="*{numberOfPeople}">                                
+                                    </div>                                    
+                                </div>                                                                      
+                                
+                                <div class="form-group d-flex justify-content-center my-4">
+									<a class="btn shadow-sm btn-w160 samuraitabelog-cancel-btn mx-4" th:href="@{/restaurants/__${restaurant.getId()}__}">キャンセル</a> 
+                                    <button type="submit" class="btn text-white shadow-sm btn-w160 samuraitabelog-btn  mx-4">予約</button>
+                                </div>                                
+                            </form>                                                                         
+                        </div>
+                    </div>
+                </div>                
+            </main>
+            
+            <!-- フッター -->
+            <div th:replace="~{fragment :: footer}"></div>
+        </div>    
+        
+        <div th:replace="~{fragment :: scripts}"></div>  
+        <script th:src="@{/js/preview.js}"></script>     
+    </body>
+</html>

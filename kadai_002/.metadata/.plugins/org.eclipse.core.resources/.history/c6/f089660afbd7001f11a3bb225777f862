@@ -1,0 +1,13 @@
+package com.example.samuraitabelog.form;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class ReservationConfirmForm {
+	private LocalDate bookingDate;
+	private LocalTime bookingTime;
+	private Integer stayTime;
+	private Integer numberOfPeople;
+}

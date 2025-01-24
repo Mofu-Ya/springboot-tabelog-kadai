@@ -1,0 +1,10 @@
+package com.example.samuraitabelog.common;
+
+@Data
+@AllArgsConstructor
+public class ValidateReserveError {
+    private String field;   // エラーが発生したフィールド名
+    private String message; // エラーメッセージ
+
+}
+

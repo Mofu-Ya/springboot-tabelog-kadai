@@ -1,0 +1,229 @@
+package com.example.samuraitabelog.service;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.samuraitabelog.common.ValidateReserveError;
+import com.example.samuraitabelog.entity.Holiday;
+import com.example.samuraitabelog.entity.Reservation;
+import com.example.samuraitabelog.entity.Restaurant;
+import com.example.samuraitabelog.entity.User;
+import com.example.samuraitabelog.form.ReservationEditForm;
+import com.example.samuraitabelog.form.ReservationRegisterForm;
+import com.example.samuraitabelog.repository.HolidayRepository;
+import com.example.samuraitabelog.repository.ReservationRepository;
+import com.example.samuraitabelog.repository.RestaurantRepository;
+import com.example.samuraitabelog.repository.UserRepository;
+
+@Service
+public class ReservationService {
+	private final ReservationRepository reservationRepository;
+	private final RestaurantRepository RestaurantRepository;
+	private final UserRepository userRepository; 
+	private final HolidayRepository holidayRepository; 
+	
+	public ReservationService(ReservationRepository reservationRepository, RestaurantRepository RestaurantRepository, 
+			UserRepository userRepository, HolidayRepository holidayRepository ) {
+		this.reservationRepository = reservationRepository;
+		this.RestaurantRepository = RestaurantRepository;
+		this.userRepository = userRepository;
+		this.holidayRepository = holidayRepository;
+	}
+	
+	@Transactional
+	public void create(User user, Restaurant restaurant, ReservationRegisterForm reservationRegisterForm) {
+		Reservation reservation = new Reservation();
+		  
+		reservation.setRestaurant(restaurant);
+		reservation.setUser(user);
+		reservation.setBookingDate(reservationRegisterForm.getBookingDate());
+		reservation.setStartTime(reservationRegisterForm.getBookingTime());
+		reservation.setEndTime(reservationRegisterForm.getBookingTime().plusHours(reservationRegisterForm.getStayTime()));
+		reservation.setNumberOfPeople(reservationRegisterForm.getNumberOfPeople());
+		
+		reservationRepository.save(reservation);				
+	}
+	
+	@Transactional
+	public void update(ReservationEditForm reservationEditForm) {
+		Reservation reservation = reservationRepository.getReferenceById(reservationEditForm.getId());
+		  
+		reservation.setBookingDate(reservationEditForm.getBookingDate());
+		reservation.setStartTime(reservationEditForm.getBookingTime());
+		reservation.setEndTime(reservationEditForm.getBookingTime().plusHours(reservationEditForm.getStayTime()));
+		reservation.setNumberOfPeople(reservationEditForm.getNumberOfPeople());
+		
+		reservationRepository.save(reservation);				
+	}
+	
+	public List<ValidateReserveError> validateReservation(Restaurant restaurant, LocalDate bookingDate, LocalTime bookingTime, boolean isCrossDay, Integer stayTime) {
+		List<ValidateReserveError> errors = new ArrayList<>();
+		
+		boolean isBusinessTimeCrossDay = restaurant.getClosingTime().isBefore(restaurant.getOpeningTime());
+		List<Holiday> holidays = holidayRepository.findAllByRestaurantId(restaurant.getId());
+		List<Integer> disabledDays = holidays				
+					.stream()
+					.map(Holiday::getDayOfWeekId)
+					.filter(Objects::nonNull)
+					.collect(Collectors.toList());
+				
+		LocalTime endTime = bookingTime.plusHours(stayTime);; 
+		
+		// 定休日にかかっているかチェック
+		boolean isClosed = disabledDays.contains(bookingDate.plusDays(1).getDayOfWeek().getValue() % 7);
+       
+		// 日またぎ不正チェック
+		boolean isJustMidnight = false;
+		
+		if (endTime.equals(LocalTime.MIDNIGHT)) {
+			isJustMidnight =  true; 
+	    }
+       
+		if((!isCrossDay && endTime.isBefore(bookingTime))  				
+				|| (isCrossDay && endTime.isAfter(bookingTime))
+				|| (!isCrossDay && isJustMidnight)) {
+			errors.add(new ValidateReserveError("isCrossDay", "日またぎを正しく設定してください。"));			
+			isCrossDay = !isCrossDay;
+		} 	
+		
+		// 入店時間が営業時間内かチェック
+		if(!isWithinRange(bookingTime, restaurant.getOpeningTime(), restaurant.getClosingTime())) {
+			
+		}
+		if(bookingTime.isBefore(restaurant.getOpeningTime())) {
+			errors.add(new ValidateReserveError("bookingTime", "予約時間が営業時間外です。"));				
+		}
+    		
+		// 営業時間が日をまたぐかどうかで分岐
+		if(isBusinessTimeCrossDay) {
+			boolean valid = 
+	            (isWithinRange(bookingTime, restaurant.getOpeningTime(), LocalTime.MAX) || 
+	            		(!isCrossDay && isWithinRange(bookingTime, LocalTime.MIN, restaurant.getClosingTime())) &&
+	            ((!isCrossDay && isWithinRange(endTime, restaurant.getOpeningTime(), LocalTime.MAX)) || 
+	            		(isCrossDay && isWithinRange(endTime, LocalTime.MIN, restaurant.getClosingTime()))));
+	        if (!valid) {
+	        	errors.add(new ValidateReserveError("bookingTime", "予約時間が営業時間外です。"));
+	        }
+	        
+			// 営業時間内かチェック(日をまたがない場合)
+//			if(!isCrossDay 
+//					&& (reservationRegisterForm.getBookingTime().isBefore(restaurant.getOpeningTime()) 
+//					|| reservationRegisterForm.getBookingTime().isAfter(restaurant.getClosingTime()))) {
+//				FieldError fieldError = new FieldError(bindingResult.getObjectName(), "bookingTime", "予約時間が営業時間外です。");
+//				bindingResult.addError(fieldError);
+//			}
+			
+			// 営業時間内かチェック(日をまたぐ場合)
+//			if(isCrossDay 
+//					&& (reservationRegisterForm.getBookingTime().isBefore(restaurant.getOpeningTime()) 
+//					|| reservationRegisterForm.getBookingTime().isBefore(restaurant.getClosingTime()))) {
+//				FieldError fieldError = new FieldError(bindingResult.getObjectName(), "bookingTime", "予約時間が営業時間外です。");
+//				bindingResult.addError(fieldError);
+//			}
+			
+			// 閉店時刻を超えるチェック(日をまたがない場合)
+//	        if (!isCrossDay && endTime.isBefore(restaurant.getClosingTime())) {
+//	        	errors.add(new ValidateReserveError("bookingTime", "予約時間が営業時間を超えています。"));		        	
+//	        }
+//	        
+//	        // 閉店時刻を超えるチェック(日をまたぐ場合)
+//	        if (isCrossDay && endTime.isAfter(restaurant.getClosingTime())) {
+//	        	errors.add(new ValidateReserveError("bookingTime", "予約時間が営業時間を超えています。"));		        	
+//	        }
+		} else {
+			if (!isWithinRange(bookingTime, restaurant.getOpeningTime(), restaurant.getClosingTime()) ||
+		            !isWithinRange(endTime, restaurant.getOpeningTime(), restaurant.getClosingTime())) {
+				errors.add(new ValidateReserveError("bookingTime", "予約時間が営業時間外です。"));
+			}
+			
+			// 営業時間内かチェック(日をまたがない場合)
+//			if(reservationRegisterForm.getBookingTime().isBefore(restaurant.getOpeningTime())) {
+//				FieldError fieldError = new FieldError(bindingResult.getObjectName(), "bookingTime", "予約時間が営業時間外です。");
+//				bindingResult.addError(fieldError);
+//			}
+			
+			// 営業時間内かチェック(日をまたぐ場合)
+//			if(isCrossDay 
+//					&& (reservationRegisterForm.getBookingTime().isBefore(restaurant.getOpeningTime()) 
+//					|| reservationRegisterForm.getBookingTime().isBefore(restaurant.getClosingTime()))) {
+//				FieldError fieldError = new FieldError(bindingResult.getObjectName(), "bookingTime", "予約時間が営業時間外です。");
+//				bindingResult.addError(fieldError);
+//			}
+			
+			// 閉店時刻を超えるチェック(日をまたがない場合)
+//	        if (!isCrossDay && endTime.isAfter(restaurant.getClosingTime())) {
+//	        	errors.add(new ValidateReserveError("bookingTime", "予約時間が営業時間を超えています。"));		        	
+//	        }
+//	        
+//	        // 閉店時刻を超えるチェック(日をまたぐ場合)
+//	        if (isCrossDay && endTime.isBefore(restaurant.getClosingTime())) {
+//	        	errors.add(new ValidateReserveError("bookingTime", "予約時間が営業時間を超えています。"));	
+//	        }
+		}
+		
+       // 翌日が定休日になるチェック(日をまたぐ場合のみ)
+       if (isCrossDay && isClosed) {
+    	   errors.add(new ValidateReserveError("bookingTime", "予約時間が翌日の休業日にかかっています。"));	       	
+       }
+       
+       return errors;
+	}
+	
+//	public boolean isValidReservation(ReservationRegisterForm form, Store store, List<Integer> disabledDays) {
+//	    LocalTime bookingTime = form.getBookingTime(); // 入店時刻
+//	    LocalDate bookingDate = form.getBookingDate(); // 予約日
+//	    int stayDuration = form.getStayDuration(); // 滞在時間（分単位）
+//
+//	    // 店舗の営業時間
+//	    LocalTime openingTime = store.getOpeningTime(); // 営業開始時刻
+//	    LocalTime closingTime = store.getClosingTime(); // 営業終了時刻
+//
+//	    // 日をまたぐかを判定
+//	    boolean isOvernight = closingTime.isBefore(openingTime);
+//
+//	    // 滞在終了時刻を計算
+//	    LocalTime endTime = bookingTime.plusMinutes(stayDuration);
+//
+//	    // 営業時間外チェック
+//	    if (isOvernight) {
+//	        // 営業時間が日をまたぐ場合
+//	        boolean valid = 
+//	            (isWithinRange(bookingTime, openingTime, LocalTime.MAX) || 
+//	             isWithinRange(bookingTime, LocalTime.MIN, closingTime)) &&
+//	            (isWithinRange(endTime, openingTime, LocalTime.MAX) || 
+//	             isWithinRange(endTime, LocalTime.MIN, closingTime));
+//	        if (!valid) return false;
+//	    } else {
+//	        // 通常の営業時間
+//	        if (!isWithinRange(bookingTime, openingTime, closingTime) ||
+//	            !isWithinRange(endTime, openingTime, closingTime)) {
+//	            return false;
+//	        }
+//	    }
+//
+//	    // 翌日が定休日の場合、日跨ぎは不可
+//	    if (isOvernight && endTime.isBefore(bookingTime)) {
+//	        LocalDate nextDay = bookingDate.plusDays(1);
+//	        int nextDayOfWeek = nextDay.getDayOfWeek().getValue(); // 曜日IDを取得
+//	        if (disabledDays.contains(nextDayOfWeek)) {
+//	            return false; // 翌日が定休日
+//	        }
+//	    }
+//
+//	    return true;
+//	}
+
+	// 指定時間が開始時間と終了時間の範囲にあるかのチェック
+	private boolean isWithinRange(LocalTime time, LocalTime start, LocalTime end) {
+	    return !time.isBefore(start) && !time.isAfter(end);
+	}
+
+}
+

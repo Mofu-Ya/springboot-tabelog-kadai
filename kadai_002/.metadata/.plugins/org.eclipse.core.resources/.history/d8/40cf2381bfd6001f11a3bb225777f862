@@ -1,0 +1,20 @@
+let maxDate = new Date();
+maxDate = maxDate.setMonth(maxDate.getMonth() + 3);
+
+flatpickr('#bookingDate', {
+//	mode: "range",
+	locale: 'ja',
+	minDate: 'today',
+	maxDate: maxDate
+});
+
+flatpickr("#timePicker", {
+    enableTime: true, // 時間選択を有効化
+    noCalendar: true, // 日付を非表示
+    dateFormat: "H:i", // 表示フォーマット (24時間形式)
+    time_24hr: true, // 24時間表記
+    minuteIncrement: 60, // 1時間単位で選択
+    defaultHour: 0, // デフォルトの開始時間
+    minTime: "00:00", // 開始時間の制限
+    maxTime: "23:00", // 終了時間の制限
+});

@@ -1,0 +1,59 @@
+package com.example.samuraitabelog.service;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.samuraitabelog.entity.Reservation;
+import com.example.samuraitabelog.entity.Restaurant;
+import com.example.samuraitabelog.entity.User;
+import com.example.samuraitabelog.repository.ReservationRepository;
+import com.example.samuraitabelog.repository.RestaurantRepository;
+import com.example.samuraitabelog.repository.UserRepository;
+import com.example.samuraitabelog.form.ReservationConfirmForm;
+import com.example.samuraitabelog.form.ReservationEditForm;
+
+@Service
+public class ReservationService {
+	private final ReservationRepository reservationRepository;
+	private final RestaurantRepository RestaurantRepository;
+	private final UserRepository userRepository; 
+	
+	public ReservationService(ReservationRepository reservationRepository, RestaurantRepository RestaurantRepository, UserRepository userRepository ) {
+		this.reservationRepository = reservationRepository;
+		this.RestaurantRepository = RestaurantRepository;
+		this.userRepository = userRepository;
+	}
+	
+	@Transactional
+	public void create(User user, Restaurant restaurant, ReservationConfirmForm reservationConfirmForm) {
+		Reservation reservation = new Reservation();
+		  
+		reservation.setRestaurant(restaurant);
+		reservation.setUser(user);
+		reservation.setBookingDate(reservationConfirmForm.getBookingDate());
+		reservation.setStartTime(reservationConfirmForm.getBookingTime());
+		reservation.setEndTime(reservationConfirmForm.getBookingTime().plusHours(reservationConfirmForm.getStayTime()));
+		reservation.setNumberOfPeople(reservationConfirmForm.getNumberOfPeople());
+		
+		reservationRepository.save(reservation);				
+	}
+	
+	@Transactional
+	public void update(User user, Restaurant restaurant, ReservationEditForm reservationEditForm) {
+		Reservation reservation = reservationRepository.getReferenceById(reservationEditForm.getId());
+		  
+		reservation.setRestaurant(restaurant);
+		reservation.setUser(user);
+		reservation.setBookingDate(reservationEditForm.getBookingDate());
+		reservation.setStartTime(reservationEditForm.getBookingTime());
+		reservation.setEndTime(reservationEditForm.getBookingTime().plusHours(reservationEditForm.getStayTime()));
+		reservation.setNumberOfPeople(reservationEditForm.getNumberOfPeople());
+		
+		reservationRepository.save(reservation);				
+	}
+}
+

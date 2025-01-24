@@ -1,0 +1,5 @@
+package com.example.samuraitabelog.repository;
+
+public class ReviewRepository {
+
+}
