@@ -98,8 +98,18 @@ public class AdminRestaurantController {
 	
 	@PostMapping("/create")
     public String create(@ModelAttribute @Validated RestaurantRegisterForm restaurantRegisterForm, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {        
+		
+		if (bindingResult.hasErrors()) {
+        	List<Category> categories = categoryRepository.findAll();
+        	model.addAttribute("restaurantRegisterForm", restaurantRegisterForm);
+        	model.addAttribute("categories", categories);
+        	model.addAttribute("days", DayOfWeek.values());
+        	
+            return "admin/restaurants/register";
+        }
+		
 		LocalTime openingTime = restaurantRegisterForm.getOpeningTime();
-		LocalTime closingTime = restaurantRegisterForm.getClosingTime();
+		LocalTime closingTime = restaurantRegisterForm.getClosingTime();		
 		
 		if (!restaurantRegisterForm.getCrossDay() && openingTime.isAfter(closingTime)) {
             bindingResult.rejectValue("closingTime", "error.closingTime",
@@ -158,9 +168,20 @@ public class AdminRestaurantController {
 	@PostMapping("/{id}/update")
 	public String update(@PathVariable(name = "id") Integer id, @ModelAttribute @Validated RestaurantEditForm restaurantEditForm, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
 		Restaurant restaurant = restaurantRepository.getReferenceById(id);
+		String imageName = restaurant.getImageName();
+		
+		if (bindingResult.hasErrors()) {
+			List<Category> categories = categoryRepository.findAll();
+			model.addAttribute("imageName",imageName);
+        	model.addAttribute("restaurantEditForm", restaurantEditForm);
+        	model.addAttribute("categories", categories);
+        	model.addAttribute("days", DayOfWeek.values());
+            
+            return "admin/restaurants/edit";
+        }
+		
 		LocalTime openingTime = restaurantEditForm.getOpeningTime();
 		LocalTime closingTime = restaurantEditForm.getClosingTime();
-		String imageName = restaurant.getImageName();
 		
 		if (!restaurantEditForm.getCrossDay() && openingTime.isAfter(closingTime)) {
             bindingResult.rejectValue("closingTime", "error.closingTime",
